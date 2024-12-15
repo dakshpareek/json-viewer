@@ -1,9 +1,15 @@
 @import '../styles/variables.css';
 
 .json-input {
-    margin: 0 auto;
+    margin: 20px auto;
     max-width: 800px;
     position: relative;
+    text-align: left;
+}
+
+.json-input h2 {
+    color: var(--color-primary);
+    margin-bottom: 16px;
 }
 
 .json-input .error {
@@ -12,21 +18,34 @@
     text-align: left;
 }
 
-.json-input textarea {
-    width: 100%;
-    height: 400px;
-    padding: 16px;
-    font-family: 'Courier New', Courier, monospace;
-    font-size: 14px;
+.json-input .ace_editor {
     border: 1px solid var(--color-muted);
     border-radius: 8px;
-    resize: vertical;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: border-color 0.3s, box-shadow 0.3s;
 }
 
-.json-input textarea:focus {
-    outline: none;
-    border-color: var(--color-accent);
-    box-shadow: 0 0 5px var(--color-accent);
+.json-input .ace_github {
+    background-color: var(--color-background);
+    color: var(--color-text);
+}
+
+.json-input .ace_scroller {
+    font-family: 'Courier New', Courier, monospace;
+    line-height: 1.5;
+}
+
+.format-button {
+    margin-top: 16px;
+    padding: 10px 20px;
+    background-color: var(--color-primary);
+    color: var(--color-text-light);
+    border: none;
+    border-radius: 28px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.format-button:hover {
+    background-color: #3c3045;
+    /* Darkened primary color */
 }

@@ -3,8 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@types/prettier": "^3.0.0",
+    "ace-builds": "^1.36.5",
     "cra-template-typescript": "1.2.0",
+    "prettier": "^2.8.8",
     "react": "^19.0.0",
+    "react-ace": "^13.0.0",
     "react-dom": "^19.0.0",
     "react-json-view": "^1.21.3",
     "react-scripts": "5.0.1"
@@ -20,6 +24,9 @@
       "react-app",
       "react-app/jest"
     ]
+  },
+  "resolutions": {
+    "@codemirror/*": "6.2.0"
   },
   "browserslist": {
     "production": [
