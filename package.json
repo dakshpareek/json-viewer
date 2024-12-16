@@ -1,7 +1,7 @@
 {
   "name": "json-viewer",
   "version": "0.1.0",
-  "homepage": "https://dakshpareek.github.io/json-viewer",
+  "homepage": ".",
   "private": true,
   "dependencies": {
     "@types/prettier": "^3.0.0",
