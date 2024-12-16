@@ -16,12 +16,14 @@ jobs:
       - name: Setup Node.js Environment
         uses: actions/setup-node@v3
         with:
-          node-version: '18'  # Specify the Node.js version your project uses
+          node-version: '18'  # Use your project's Node.js version
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
 
-      - name: Install pnpm
-        run: npm install -g pnpm
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8.6.3  # Specify the pnpm version you want to use (optional)
 
       - name: Install Dependencies
         run: pnpm install
