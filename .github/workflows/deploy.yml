@@ -1,17 +1,19 @@
 name: Deploy React App to GitHub Pages
-
 on:
   push:
     branches:
-      - main  # Use your default branch name
-
+      - main
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8.6.3
 
       - name: Setup Node.js Environment
         uses: actions/setup-node@v3
@@ -19,12 +21,6 @@ jobs:
           node-version: '22.10.0'
           cache: 'pnpm'
           cache-dependency-path: pnpm-lock.yaml
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 8.6.3  # Specify the pnpm version you want to use (optional)
-          run_install: false  # Prevent pnpm from auto-running install
 
       - name: Install Dependencies
         run: pnpm install
