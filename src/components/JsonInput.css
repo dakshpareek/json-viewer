@@ -1,10 +1,62 @@
 @import '../styles/variables.css';
 
 .json-input {
-    margin: 20px auto;
-    max-width: 800px;
+    margin: 60px;
+    max-width: none;
+    /* Increased max-width to allow for wider content */
     position: relative;
     text-align: left;
+}
+
+/* Two-column layout when jsonData is present */
+.json-input.two-column {
+    display: flex;
+    flex-wrap: nowrap;
+    /* Prevent items from wrapping */
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+.editor-container,
+.viewer-container {
+    flex: 1;
+    min-width: 0;
+}
+
+.editor-container,
+.viewer-container {
+    margin: 0;
+}
+
+/* Adjust widths in two-column layout */
+.json-input.two-column .editor-container,
+.json-input.two-column .viewer-container {
+    width: calc(50% - 10px);
+}
+
+/* Remove or reduce margins to expand content */
+.json-input.two-column .editor-container,
+.json-input.two-column .viewer-container {
+    margin: 0 10px;
+}
+
+/* Ensure Ace Editor and ReactJson take full width */
+.editor-container .ace_editor,
+.viewer-container .react-json-view {
+    width: 100%;
+}
+
+/* Adjust Ace Editor height */
+.editor-container .ace_editor {
+    height: 70vh;
+    /* Increase height as needed */
+}
+
+.viewer-container .react-json-view {
+    max-height: 70vh;
+    /* Match editor height */
+    overflow: auto;
 }
 
 .json-input h2 {
@@ -18,22 +70,6 @@
     text-align: left;
 }
 
-.json-input .ace_editor {
-    border: 1px solid var(--color-muted);
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.json-input .ace_github {
-    background-color: var(--color-background);
-    color: var(--color-text);
-}
-
-.json-input .ace_scroller {
-    font-family: 'Courier New', Courier, monospace;
-    line-height: 1.5;
-}
-
 .format-button {
     margin-top: 16px;
     padding: 10px 20px;
@@ -43,9 +79,31 @@
     border-radius: 28px;
     cursor: pointer;
     font-size: 16px;
+    transition: background-color 0.3s;
 }
 
 .format-button:hover {
     background-color: #3c3045;
     /* Darkened primary color */
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .json-input.two-column {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        /* Remove gap for stacked layout */
+    }
+
+    .editor-container,
+    .viewer-container {
+        width: 100%;
+    }
+
+    .editor-container .ace_editor,
+    .viewer-container .react-json-view {
+        height: 50vh;
+        /* Adjust height for smaller screens */
+    }
 }
