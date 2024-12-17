@@ -6,4 +6,11 @@
     --color-muted: #e0e0e0;
     --color-text: #333;
     --color-text-light: #fff;
+
+    --color-success: #5cb85c;
+    /* Green */
+    --color-info: #5bc0de;
+    /* Light Blue */
+    --color-danger: #d9534f;
+    /* Red */
 }

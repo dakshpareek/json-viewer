@@ -66,7 +66,7 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background-color: var(--color-primary);
+    /* background-color: var(--color-primary); */
     color: var(--color-text-light);
     border: none;
     border-radius: 28px;
@@ -91,6 +91,55 @@
 /* Icon Styles */
 .icon-button i {
     font-size: 20px;
+}
+
+/* Format JSON Button */
+.button.format-button {
+    background-color: var(--color-primary);
+}
+
+.button.format-button:hover {
+    background-color: #3c3045;
+}
+
+/* Paste from Clipboard Button */
+.icon-button.paste-button {
+    background-color: var(--color-info);
+}
+
+.icon-button.paste-button:hover {
+    background-color: #31b0d5;
+    /* Slightly darker blue */
+}
+
+/* Copy Formatted JSON Button */
+.icon-button.copy-button {
+    background-color: var(--color-success);
+}
+
+.icon-button.copy-button:hover {
+    background-color: #449d44;
+    /* Slightly darker green */
+}
+
+/* Clear Button */
+.icon-button.clear-button {
+    background-color: var(--color-danger);
+}
+
+.icon-button.clear-button:hover {
+    background-color: #c9302c;
+    /* Slightly darker red */
+}
+
+/* Toggle Viewer Button */
+.icon-button.toggle-button {
+    background-color: var(--color-accent);
+}
+
+.icon-button.toggle-button:hover {
+    background-color: #e6b800;
+    /* Slightly darker yellow */
 }
 
 /* Hover and Active States */

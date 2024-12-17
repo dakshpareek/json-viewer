@@ -86,6 +86,30 @@ const JsonInput: React.FC = () => {
     return false;
   };
 
+  const handlePasteFromClipboard = async () => {
+    try {
+      const clipboardText = await navigator.clipboard.readText();
+      if (clipboardText) {
+        formatJson(clipboardText); // Format and set the JSON
+      } else {
+        alert('Clipboard is empty or does not contain text.');
+      }
+    } catch (error) {
+      console.error('Failed to read clipboard contents: ', error);
+      alert('Failed to read clipboard contents. Please allow clipboard permissions.');
+    }
+  };
+
+  const handleCopyFormattedJson = async () => {
+    try {
+      await navigator.clipboard.writeText(text);
+      alert('Formatted JSON copied to clipboard!');
+    } catch (error) {
+      console.error('Failed to copy text: ', error);
+      alert('Failed to copy formatted JSON. Please try again.');
+    }
+  };
+
   // Handle format button click
   const handleFormatClick = () => {
     formatJson(text);
@@ -131,27 +155,40 @@ const JsonInput: React.FC = () => {
           }}
         />
         <div className="button-group">
-          <button
-            className="button format-button"
-            onClick={handleFormatClick}
-          >
+          <button className="button format-button" onClick={handleFormatClick}>
             Format JSON
+          </button>
+          <button
+            className="icon-button paste-button"
+            onClick={handlePasteFromClipboard}
+            title="Paste JSON from Clipboard"
+          >
+            <i className="fas fa-paste"></i>
           </button>
           <button
             className="icon-button clear-button"
             onClick={handleClearClick}
             title="Clear JSON"
           >
-            <i className="fas fa-times"></i>
+            <i className="fas fa-trash-alt"></i>
           </button>
           {jsonData && (
-            <button
-              className="icon-button toggle-button"
-              onClick={handleToggleViewer}
-              title={showViewer ? 'Hide Viewer' : 'Show Viewer'}
-            >
-              <i className={`fas fa-eye${showViewer ? '-slash' : ''}`}></i>
-            </button>
+            <>
+              <button
+                className="icon-button toggle-button"
+                onClick={handleToggleViewer}
+                title={showViewer ? 'Hide Viewer' : 'Show Viewer'}
+              >
+                <i className={`fas fa-eye${showViewer ? '-slash' : ''}`}></i>
+              </button>
+              <button
+                className="icon-button copy-button"
+                onClick={handleCopyFormattedJson}
+                title="Copy Formatted JSON"
+              >
+                <i className="fas fa-copy"></i>
+              </button>
+            </>
           )}
         </div>
       </div>
