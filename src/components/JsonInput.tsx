@@ -86,6 +86,7 @@ const JsonInput: React.FC = () => {
     return false;
   };
 
+  // Handle paste from clipboard button click
   const handlePasteFromClipboard = async () => {
     try {
       const clipboardText = await navigator.clipboard.readText();
@@ -100,6 +101,7 @@ const JsonInput: React.FC = () => {
     }
   };
 
+  // Handle copy formatted JSON button click
   const handleCopyFormattedJson = async () => {
     try {
       await navigator.clipboard.writeText(text);
@@ -155,38 +157,45 @@ const JsonInput: React.FC = () => {
           }}
         />
         <div className="button-group">
-          <button className="button format-button" onClick={handleFormatClick}>
+          <button
+            className="button format-button"
+            onClick={handleFormatClick}
+          >
             Format JSON
           </button>
           <button
             className="icon-button paste-button"
             onClick={handlePasteFromClipboard}
-            title="Paste JSON from Clipboard"
+            aria-label="Paste JSON from Clipboard"
           >
             <i className="fas fa-paste"></i>
+            <span className="tooltip">Paste JSON from Clipboard</span>
           </button>
           <button
             className="icon-button clear-button"
             onClick={handleClearClick}
-            title="Clear JSON"
+            aria-label="Clear JSON"
           >
             <i className="fas fa-trash-alt"></i>
+            <span className="tooltip">Clear JSON</span>
           </button>
           {jsonData && (
             <>
               <button
                 className="icon-button toggle-button"
                 onClick={handleToggleViewer}
-                title={showViewer ? 'Hide Viewer' : 'Show Viewer'}
+                aria-label={showViewer ? 'Hide Viewer' : 'Show Viewer'}
               >
                 <i className={`fas fa-eye${showViewer ? '-slash' : ''}`}></i>
+                <span className="tooltip">{showViewer ? 'Hide Viewer' : 'Show Viewer'}</span>
               </button>
               <button
                 className="icon-button copy-button"
                 onClick={handleCopyFormattedJson}
-                title="Copy Formatted JSON"
+                aria-label="Copy Formatted JSON"
               >
                 <i className="fas fa-copy"></i>
+                <span className="tooltip">Copy Formatted JSON</span>
               </button>
             </>
           )}
@@ -220,7 +229,7 @@ const JsonInput: React.FC = () => {
               borderRadius: '8px',
               backgroundColor: 'var(--color-background)',
               border: '1px solid var(--color-muted)',
-              maxHeight: '70vh',
+              maxHeight: '75vh',
               overflow: 'auto',
             }}
             onSelect={(selection) => {

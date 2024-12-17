@@ -1,7 +1,7 @@
 @import '../styles/variables.css';
 
 .json-input {
-    margin: 60px;
+    margin: 40px 60px;
     max-width: none;
     position: relative;
     text-align: left;
@@ -12,7 +12,7 @@
     flex-wrap: nowrap;
     justify-content: space-between;
     align-items: flex-start;
-    gap: 20px;
+    gap: 24px;
 }
 
 .editor-container,
@@ -24,7 +24,7 @@
 
 .json-input.two-column .editor-container,
 .json-input.two-column .viewer-container {
-    width: calc(50% - 10px);
+    width: calc(50% - 12px);
 }
 
 .editor-container .ace_editor,
@@ -33,11 +33,11 @@
 }
 
 .editor-container .ace_editor {
-    height: 70vh;
+    height: 75vh;
 }
 
 .viewer-container .react-json-view {
-    max-height: 70vh;
+    max-height: 75vh;
     overflow: auto;
 }
 
@@ -56,8 +56,9 @@
 .button-group {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     margin-top: 16px;
+    align-items: center;
 }
 
 /* Base Button Styles */
@@ -66,14 +67,14 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    /* background-color: var(--color-primary); */
     color: var(--color-text-light);
     border: none;
-    border-radius: 28px;
+    border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s;
     font-family: inherit;
+    font-weight: 500;
 }
 
 /* Text Button */
@@ -86,12 +87,15 @@
     padding: 0;
     width: 44px;
     height: 44px;
+    position: relative;
 }
 
 /* Icon Styles */
 .icon-button i {
-    font-size: 20px;
+    font-size: 18px;
 }
+
+/* Individual Button Styles and States */
 
 /* Format JSON Button */
 .button.format-button {
@@ -102,6 +106,10 @@
     background-color: #3c3045;
 }
 
+.button.format-button:active {
+    background-color: #2b1f2e;
+}
+
 /* Paste from Clipboard Button */
 .icon-button.paste-button {
     background-color: var(--color-info);
@@ -109,7 +117,10 @@
 
 .icon-button.paste-button:hover {
     background-color: #31b0d5;
-    /* Slightly darker blue */
+}
+
+.icon-button.paste-button:active {
+    background-color: #269abc;
 }
 
 /* Copy Formatted JSON Button */
@@ -119,7 +130,10 @@
 
 .icon-button.copy-button:hover {
     background-color: #449d44;
-    /* Slightly darker green */
+}
+
+.icon-button.copy-button:active {
+    background-color: #398439;
 }
 
 /* Clear Button */
@@ -129,7 +143,10 @@
 
 .icon-button.clear-button:hover {
     background-color: #c9302c;
-    /* Slightly darker red */
+}
+
+.icon-button.clear-button:active {
+    background-color: #ac2925;
 }
 
 /* Toggle Viewer Button */
@@ -139,22 +156,48 @@
 
 .icon-button.toggle-button:hover {
     background-color: #e6b800;
-    /* Slightly darker yellow */
 }
 
-/* Hover and Active States */
-.button:hover,
-.icon-button:hover {
-    background-color: #3c3045;
+.icon-button.toggle-button:active {
+    background-color: #cca300;
 }
 
-.button:active,
-.icon-button:active {
-    background-color: #2b1f2e;
+/* Tooltip Styles */
+.icon-button .tooltip {
+    visibility: hidden;
+    width: max-content;
+    max-width: 160px;
+    background-color: var(--color-text);
+    color: var(--color-text-light);
+    text-align: center;
+    border-radius: 4px;
+    padding: 6px 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 120%;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 14px;
+    line-height: 1.2;
 }
 
-/* Tooltip Styles (optional if you want custom tooltips) */
-/* You can use CSS tooltip styles if you prefer over the default 'title' attribute */
+.icon-button .tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: var(--color-text) transparent transparent transparent;
+}
+
+.icon-button:hover .tooltip {
+    visibility: visible;
+    opacity: 1;
+}
 
 /* Breadcrumb styles */
 .breadcrumb {
