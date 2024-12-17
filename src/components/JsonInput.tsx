@@ -5,10 +5,10 @@ import AceEditor from 'react-ace';
 import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-github';
 
-import parserBabel from 'prettier/parser-babel'; // Correct parser import
+import parserBabel from 'prettier/parser-babel';
 import prettier from 'prettier/standalone';
 
-import ReactJson from 'react-json-view'; // Import ReactJson for the viewer
+import ReactJson from 'react-json-view';
 
 import './JsonInput.css';
 
@@ -25,7 +25,10 @@ ace.config.setModuleUrl(
 const JsonInput: React.FC = () => {
   const [text, setText] = useState<string>('');
   const [error, setError] = useState<string>('');
-  const [jsonData, setJsonData] = useState<any>(null); // State for parsed JSON data
+  const [jsonData, setJsonData] = useState<any>(null);
+  const [showViewer, setShowViewer] = useState<boolean>(true);
+  const [selectedKeyPath, setSelectedKeyPath] = useState<string[]>([]);
+  const [copyMessage, setCopyMessage] = useState<string>('');
 
   // Format JSON using Prettier
   const formatJson = (input: string) => {
@@ -34,13 +37,14 @@ const JsonInput: React.FC = () => {
         parser: 'json',
         plugins: [parserBabel],
       });
-      const parsedData = JSON.parse(formatted); // Parse to ensure valid JSON
+      const parsedData = JSON.parse(formatted);
       setText(formatted);
       setError('');
-      setJsonData(parsedData); // Set the parsed JSON data
+      setJsonData(parsedData);
+      // Do not modify showViewer; keep the user's preference
     } catch (e) {
       setError((e as Error).message);
-      setJsonData(null); // Clear jsonData if there's an error
+      setJsonData(null);
     }
   };
 
@@ -48,7 +52,8 @@ const JsonInput: React.FC = () => {
   const handleChange = (value: string) => {
     setText(value);
     if (!value.trim()) {
-      setJsonData(null); // Clear jsonData if the editor is empty
+      setJsonData(null);
+      setSelectedKeyPath([]);
     }
   };
 
@@ -56,7 +61,6 @@ const JsonInput: React.FC = () => {
   const handlePaste = (pastedData: any) => {
     let pastedText = '';
 
-    // Check if pastedData is a string
     if (typeof pastedData === 'string') {
       pastedText = pastedData;
     } else if (pastedData && pastedData.text) {
@@ -87,9 +91,18 @@ const JsonInput: React.FC = () => {
     formatJson(text);
   };
 
-  // Handle focus loss to autoformat
-  const handleBlur = () => {
-    formatJson(text);
+  // Handle clear button click
+  const handleClearClick = () => {
+    setText('');
+    setError('');
+    setJsonData(null);
+    setShowViewer(true); // Reset viewer visibility to default
+    setSelectedKeyPath([]);
+  };
+
+  // Handle viewer toggle button click
+  const handleToggleViewer = () => {
+    setShowViewer(!showViewer);
   };
 
   return (
@@ -103,32 +116,64 @@ const JsonInput: React.FC = () => {
           name="json-editor"
           onChange={handleChange}
           value={text || ''}
-          onBlur={handleBlur}
+          onBlur={handleFormatClick}
           editorProps={{ $blockScrolling: true }}
           width="100%"
           height="400px"
           setOptions={{
             showLineNumbers: true,
             tabSize: 2,
-            useWorker: true, // Enable syntax checking worker
+            useWorker: true,
           }}
           onLoad={(editor) => {
             // Attach the paste event handler
             editor.on('paste', handlePaste);
           }}
         />
-        <button className="format-button" onClick={handleFormatClick}>
-          Format JSON
-        </button>
+        <div className="button-group">
+          <button
+            className="button format-button"
+            onClick={handleFormatClick}
+          >
+            Format JSON
+          </button>
+          <button
+            className="icon-button clear-button"
+            onClick={handleClearClick}
+            title="Clear JSON"
+          >
+            <i className="fas fa-times"></i>
+          </button>
+          {jsonData && (
+            <button
+              className="icon-button toggle-button"
+              onClick={handleToggleViewer}
+              title={showViewer ? 'Hide Viewer' : 'Show Viewer'}
+            >
+              <i className={`fas fa-eye${showViewer ? '-slash' : ''}`}></i>
+            </button>
+          )}
+        </div>
       </div>
 
-      {jsonData && (
+      {jsonData && showViewer && (
         <div className="viewer-container">
           <h2>JSON Viewer</h2>
+          {selectedKeyPath.length > 0 && (
+            <div className="breadcrumb">
+              {selectedKeyPath.map((key, index) => (
+                <span key={index}>
+                  {key}
+                  {index < selectedKeyPath.length - 1 && ' > '}
+                </span>
+              ))}
+            </div>
+          )}
+          {copyMessage && <div className="copy-message">{copyMessage}</div>}
           <ReactJson
             src={jsonData}
             name={null}
-            collapsed={true} // Collapse all levels by default
+            collapsed={true}
             enableClipboard={false}
             displayDataTypes={false}
             displayObjectSize={false}
@@ -138,8 +183,28 @@ const JsonInput: React.FC = () => {
               borderRadius: '8px',
               backgroundColor: 'var(--color-background)',
               border: '1px solid var(--color-muted)',
-              maxHeight: '400px',
+              maxHeight: '70vh',
               overflow: 'auto',
+            }}
+            onSelect={(selection) => {
+              setSelectedKeyPath(selection.namespace);
+
+              // Check if a value is clicked
+              if (typeof selection.value !== 'object') {
+                // Copy the value to clipboard
+                navigator.clipboard
+                  .writeText(String(selection.value))
+                  .then(() => {
+                    setCopyMessage('Value copied to clipboard!');
+                    // Hide the message after 2 seconds
+                    setTimeout(() => {
+                      setCopyMessage('');
+                    }, 2000);
+                  })
+                  .catch((err) => {
+                    console.error('Failed to copy!', err);
+                  });
+              }
             }}
           />
         </div>

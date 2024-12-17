@@ -3,16 +3,13 @@
 .json-input {
     margin: 60px;
     max-width: none;
-    /* Increased max-width to allow for wider content */
     position: relative;
     text-align: left;
 }
 
-/* Two-column layout when jsonData is present */
 .json-input.two-column {
     display: flex;
     flex-wrap: nowrap;
-    /* Prevent items from wrapping */
     justify-content: space-between;
     align-items: flex-start;
     gap: 20px;
@@ -22,40 +19,25 @@
 .viewer-container {
     flex: 1;
     min-width: 0;
-}
-
-.editor-container,
-.viewer-container {
     margin: 0;
 }
 
-/* Adjust widths in two-column layout */
 .json-input.two-column .editor-container,
 .json-input.two-column .viewer-container {
     width: calc(50% - 10px);
 }
 
-/* Remove or reduce margins to expand content */
-.json-input.two-column .editor-container,
-.json-input.two-column .viewer-container {
-    margin: 0 10px;
-}
-
-/* Ensure Ace Editor and ReactJson take full width */
 .editor-container .ace_editor,
 .viewer-container .react-json-view {
     width: 100%;
 }
 
-/* Adjust Ace Editor height */
 .editor-container .ace_editor {
     height: 70vh;
-    /* Increase height as needed */
 }
 
 .viewer-container .react-json-view {
     max-height: 70vh;
-    /* Match editor height */
     overflow: auto;
 }
 
@@ -70,9 +52,20 @@
     text-align: left;
 }
 
-.format-button {
+/* Button Group */
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-top: 16px;
-    padding: 10px 20px;
+}
+
+/* Base Button Styles */
+.button,
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background-color: var(--color-primary);
     color: var(--color-text-light);
     border: none;
@@ -80,11 +73,61 @@
     cursor: pointer;
     font-size: 16px;
     transition: background-color 0.3s;
+    font-family: inherit;
 }
 
-.format-button:hover {
+/* Text Button */
+.button {
+    padding: 10px 20px;
+}
+
+/* Icon Button */
+.icon-button {
+    padding: 0;
+    width: 44px;
+    height: 44px;
+}
+
+/* Icon Styles */
+.icon-button i {
+    font-size: 20px;
+}
+
+/* Hover and Active States */
+.button:hover,
+.icon-button:hover {
     background-color: #3c3045;
-    /* Darkened primary color */
+}
+
+.button:active,
+.icon-button:active {
+    background-color: #2b1f2e;
+}
+
+/* Tooltip Styles (optional if you want custom tooltips) */
+/* You can use CSS tooltip styles if you prefer over the default 'title' attribute */
+
+/* Breadcrumb styles */
+.breadcrumb {
+    margin-bottom: 16px;
+    font-size: 16px;
+    color: var(--color-primary);
+}
+
+.breadcrumb span {
+    color: var(--color-primary);
+}
+
+.breadcrumb span+span:before {
+    content: ' > ';
+    color: var(--color-muted);
+}
+
+/* Copy message styles */
+.copy-message {
+    margin-bottom: 16px;
+    font-size: 14px;
+    color: var(--color-accent);
 }
 
 /* Responsive adjustments */
@@ -93,7 +136,6 @@
         flex-direction: column;
         align-items: stretch;
         gap: 0;
-        /* Remove gap for stacked layout */
     }
 
     .editor-container,
@@ -104,6 +146,5 @@
     .editor-container .ace_editor,
     .viewer-container .react-json-view {
         height: 50vh;
-        /* Adjust height for smaller screens */
     }
 }
