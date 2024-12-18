@@ -199,6 +199,28 @@
     opacity: 1;
 }
 
+/* Ensure the viewer container adjusts to the new component */
+.viewer-container .json-viewer {
+    width: 100%;
+    max-height: 75vh;
+    overflow: auto;
+}
+
+/* If necessary, override default styles from JsonViewer */
+.json-viewer {
+    background-color: var(--color-background);
+    color: var(--color-text);
+}
+
+.json-key {
+    cursor: pointer;
+    color: var(--color-primary);
+}
+
+.json-key:hover {
+    text-decoration: underline;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .json-input.two-column {

@@ -1,14 +1,14 @@
-import ace from 'ace-builds/src-noconflict/ace';
 import React, { useState } from 'react';
 import AceEditor from 'react-ace';
 
+import ace from 'ace-builds/src-noconflict/ace';
 import 'ace-builds/src-noconflict/mode-json';
 import 'ace-builds/src-noconflict/theme-github';
 
 import parserBabel from 'prettier/parser-babel';
 import prettier from 'prettier/standalone';
 
-import ReactJson from 'react-json-view';
+import { DataItemProps, JsonViewer } from '@textea/json-viewer';
 
 import './JsonInput.css';
 
@@ -27,7 +27,10 @@ ace.config.setModuleUrl(
   'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/worker-json.js'
 );
 
-const JsonInput: React.FC<JsonInputProps> = ({ selectedKeyPath, setSelectedKeyPath }) => {
+const JsonInput: React.FC<JsonInputProps> = ({
+  selectedKeyPath,
+  setSelectedKeyPath,
+}) => {
   const [text, setText] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [jsonData, setJsonData] = useState<any>(null);
@@ -45,7 +48,8 @@ const JsonInput: React.FC<JsonInputProps> = ({ selectedKeyPath, setSelectedKeyPa
       setError('');
 
       // Check if the JSON data has changed
-      const isDifferent = JSON.stringify(jsonData) !== JSON.stringify(parsedData);
+      const isDifferent =
+        JSON.stringify(jsonData) !== JSON.stringify(parsedData);
       if (isDifferent) {
         setJsonData(parsedData);
         setSelectedKeyPath([]); // Reset breadcrumb when JSON changes
@@ -69,29 +73,13 @@ const JsonInput: React.FC<JsonInputProps> = ({ selectedKeyPath, setSelectedKeyPa
 
   // Handle paste event to autoformat
   const handlePaste = (pastedData: any) => {
-    let pastedText = '';
-
-    if (typeof pastedData === 'string') {
-      pastedText = pastedData;
-    } else if (pastedData && pastedData.text) {
-      if (Array.isArray(pastedData.text)) {
-        pastedText = pastedData.text.join('\n');
-      } else if (typeof pastedData.text === 'string') {
-        pastedText = pastedData.text;
-      }
+    const clipboardData = pastedData.clipboardData || window.clipboardData;
+    if (clipboardData) {
+      const pastedText = clipboardData.getData('Text');
+      formatJson(pastedText);
     } else {
-      const clipboardData = pastedData.clipboardData || window.clipboardData;
-      if (clipboardData) {
-        pastedText = clipboardData.getData('Text');
-      } else {
-        console.error('Unable to extract pasted text');
-        return false;
-      }
+      console.error('Unable to extract pasted text');
     }
-
-    // Format the pasted JSON
-    formatJson(pastedText);
-
     // Prevent the default paste behavior
     return false;
   };
@@ -101,13 +89,15 @@ const JsonInput: React.FC<JsonInputProps> = ({ selectedKeyPath, setSelectedKeyPa
     try {
       const clipboardText = await navigator.clipboard.readText();
       if (clipboardText) {
-        formatJson(clipboardText); // Format and set the JSON
+        formatJson(clipboardText);
       } else {
         alert('Clipboard is empty or does not contain text.');
       }
     } catch (error) {
       console.error('Failed to read clipboard contents: ', error);
-      alert('Failed to read clipboard contents. Please allow clipboard permissions.');
+      alert(
+        'Failed to read clipboard contents. Please allow clipboard permissions.'
+      );
     }
   };
 
@@ -132,13 +122,47 @@ const JsonInput: React.FC<JsonInputProps> = ({ selectedKeyPath, setSelectedKeyPa
     setText('');
     setError('');
     setJsonData(null);
-    setShowViewer(true); // Reset viewer visibility to default
+    setShowViewer(true);
     setSelectedKeyPath([]);
   };
 
   // Handle viewer toggle button click
   const handleToggleViewer = () => {
     setShowViewer(!showViewer);
+  };
+
+  // Define custom key renderer
+  const CustomKeyRenderer: React.FC<DataItemProps> & {
+    when: (props: DataItemProps) => boolean;
+  } = (props) => {
+    const { path, nestedIndex } = props;
+
+    const key =
+      nestedIndex !== undefined
+        ? String(nestedIndex)
+        : String(path[path.length - 1]);
+
+    const fullPath = path.map((p) => String(p));
+
+    const handleClick = () => {
+      setSelectedKeyPath(fullPath);
+    };
+
+    return (
+      <span
+        className="json-key"
+        onClick={handleClick}
+        style={{ cursor: 'pointer', color: 'var(--color-primary)' }}
+      >
+        {key}
+      </span>
+    );
+  };
+
+  // Implement the required 'when' method
+  CustomKeyRenderer.when = (props: DataItemProps) => {
+    // Return true to apply this renderer to all keys
+    return true;
   };
 
   return (
@@ -197,7 +221,9 @@ const JsonInput: React.FC<JsonInputProps> = ({ selectedKeyPath, setSelectedKeyPa
                 aria-label={showViewer ? 'Hide Viewer' : 'Show Viewer'}
               >
                 <i className={`fas fa-eye${showViewer ? '-slash' : ''}`}></i>
-                <span className="tooltip">{showViewer ? 'Hide Viewer' : 'Show Viewer'}</span>
+                <span className="tooltip">
+                  {showViewer ? 'Hide Viewer' : 'Show Viewer'}
+                </span>
               </button>
               <button
                 className="icon-button copy-button"
@@ -215,14 +241,17 @@ const JsonInput: React.FC<JsonInputProps> = ({ selectedKeyPath, setSelectedKeyPa
       {jsonData && showViewer && (
         <div className="viewer-container">
           <h2>JSON Viewer</h2>
-          <ReactJson
-            src={jsonData}
-            name={null}
-            collapsed={true} // Collapsed by default
-            enableClipboard={false}
-            displayDataTypes={false}
-            displayObjectSize={false}
-            theme="rjv-default"
+          <JsonViewer
+            value={jsonData}
+            rootName={false}
+            defaultInspectDepth={0} // Collapsed by default
+            theme="light"
+            displayDataTypes={false} // Hide data types
+            keyRenderer={CustomKeyRenderer}
+            onSelect={(path) => {
+              const pathStrings = path.map((p) => String(p));
+              setSelectedKeyPath(pathStrings);
+            }}
             style={{
               padding: '20px',
               borderRadius: '8px',
@@ -230,21 +259,6 @@ const JsonInput: React.FC<JsonInputProps> = ({ selectedKeyPath, setSelectedKeyPa
               border: '1px solid var(--color-muted)',
               maxHeight: '75vh',
               overflow: 'auto',
-            }}
-            onSelect={(selection) => {
-              if (selection.name !== null) {
-                // Update selectedKeyPath when a value is clicked
-                setSelectedKeyPath([...selection.namespace, String(selection.name)]);
-              } else if (selection.namespace.length > 0) {
-                // If root object is selected
-                setSelectedKeyPath(selection.namespace);
-              }
-            }}
-            onLabelClick={(label, data, event) => {
-              event.stopPropagation();
-              // Update selectedKeyPath when a key (label) is clicked
-              const path = data.namespace ? [...data.namespace, String(label)] : [String(label)];
-              setSelectedKeyPath(path);
             }}
           />
         </div>
