@@ -1,0 +1,78 @@
+/* Centering the Breadcrumb */
+.breadcrumb-container {
+    display: flex;
+    justify-content: center;
+    /* Center horizontally */
+    margin-bottom: 16px;
+}
+
+.breadcrumb {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    padding: 4px 8px;
+    /* Adjusted size */
+    background-color: var(--color-background);
+    border-radius: 8px;
+}
+
+.breadcrumb li {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.breadcrumb li+li {
+    margin-left: 4px;
+}
+
+.breadcrumb li+li::before {
+    content: '/';
+    margin-right: 4px;
+    color: var(--color-muted);
+}
+
+.breadcrumb span {
+    text-decoration: none;
+    color: var(--color-primary);
+    padding: 4px 6px;
+    border-radius: 14px;
+    transition: background-color 0.3s ease-in-out;
+    font-size: 0.85em;
+    cursor: default;
+}
+
+.breadcrumb span:hover {
+    background-color: var(--color-accent);
+    color: var(--color-text-light);
+}
+
+.breadcrumb li:last-child span {
+    background-color: var(--color-primary);
+    color: var(--color-text-light);
+}
+
+.breadcrumb li:last-child span:hover {
+    background-color: var(--color-primary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .breadcrumb {
+        flex-wrap: wrap;
+        padding: 4px;
+    }
+
+    .breadcrumb li+li {
+        margin-left: 2px;
+    }
+
+    .breadcrumb li+li::before {
+        margin-right: 2px;
+    }
+
+    .breadcrumb span {
+        padding: 3px 5px;
+        font-size: 0.8em;
+    }
+}

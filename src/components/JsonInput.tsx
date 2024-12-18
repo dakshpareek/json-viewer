@@ -12,6 +12,11 @@ import ReactJson from 'react-json-view';
 
 import './JsonInput.css';
 
+interface JsonInputProps {
+  selectedKeyPath: string[];
+  setSelectedKeyPath: React.Dispatch<React.SetStateAction<string[]>>;
+}
+
 // Configure Ace Editor to load worker scripts from CDN
 ace.config.set(
   'basePath',
@@ -22,13 +27,11 @@ ace.config.setModuleUrl(
   'https://cdnjs.cloudflare.com/ajax/libs/ace/1.4.14/worker-json.js'
 );
 
-const JsonInput: React.FC = () => {
+const JsonInput: React.FC<JsonInputProps> = ({ selectedKeyPath, setSelectedKeyPath }) => {
   const [text, setText] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [jsonData, setJsonData] = useState<any>(null);
   const [showViewer, setShowViewer] = useState<boolean>(true);
-  const [selectedKeyPath, setSelectedKeyPath] = useState<string[]>([]);
-  const [copyMessage, setCopyMessage] = useState<string>('');
 
   // Format JSON using Prettier
   const formatJson = (input: string) => {
@@ -40,11 +43,17 @@ const JsonInput: React.FC = () => {
       const parsedData = JSON.parse(formatted);
       setText(formatted);
       setError('');
-      setJsonData(parsedData);
-      // Do not modify showViewer; keep the user's preference
+
+      // Check if the JSON data has changed
+      const isDifferent = JSON.stringify(jsonData) !== JSON.stringify(parsedData);
+      if (isDifferent) {
+        setJsonData(parsedData);
+        setSelectedKeyPath([]); // Reset breadcrumb when JSON changes
+      }
     } catch (e) {
       setError((e as Error).message);
       setJsonData(null);
+      setSelectedKeyPath([]); // Reset breadcrumb on error
     }
   };
 
@@ -53,6 +62,7 @@ const JsonInput: React.FC = () => {
     setText(value);
     if (!value.trim()) {
       setJsonData(null);
+      setError('');
       setSelectedKeyPath([]);
     }
   };
@@ -205,21 +215,10 @@ const JsonInput: React.FC = () => {
       {jsonData && showViewer && (
         <div className="viewer-container">
           <h2>JSON Viewer</h2>
-          {selectedKeyPath.length > 0 && (
-            <div className="breadcrumb">
-              {selectedKeyPath.map((key, index) => (
-                <span key={index}>
-                  {key}
-                  {index < selectedKeyPath.length - 1 && ' > '}
-                </span>
-              ))}
-            </div>
-          )}
-          {copyMessage && <div className="copy-message">{copyMessage}</div>}
           <ReactJson
             src={jsonData}
             name={null}
-            collapsed={true}
+            collapsed={true} // Collapsed by default
             enableClipboard={false}
             displayDataTypes={false}
             displayObjectSize={false}
@@ -233,24 +232,19 @@ const JsonInput: React.FC = () => {
               overflow: 'auto',
             }}
             onSelect={(selection) => {
-              setSelectedKeyPath(selection.namespace);
-
-              // Check if a value is clicked
-              if (typeof selection.value !== 'object') {
-                // Copy the value to clipboard
-                navigator.clipboard
-                  .writeText(String(selection.value))
-                  .then(() => {
-                    setCopyMessage('Value copied to clipboard!');
-                    // Hide the message after 2 seconds
-                    setTimeout(() => {
-                      setCopyMessage('');
-                    }, 2000);
-                  })
-                  .catch((err) => {
-                    console.error('Failed to copy!', err);
-                  });
+              if (selection.name !== null) {
+                // Update selectedKeyPath when a value is clicked
+                setSelectedKeyPath([...selection.namespace, String(selection.name)]);
+              } else if (selection.namespace.length > 0) {
+                // If root object is selected
+                setSelectedKeyPath(selection.namespace);
               }
+            }}
+            onLabelClick={(label, data, event) => {
+              event.stopPropagation();
+              // Update selectedKeyPath when a key (label) is clicked
+              const path = data.namespace ? [...data.namespace, String(label)] : [String(label)];
+              setSelectedKeyPath(path);
             }}
           />
         </div>
