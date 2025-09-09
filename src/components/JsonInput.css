@@ -1,67 +1,342 @@
 @import '../styles/variables.css';
 
 .json-input {
-    margin: 40px 60px;
-    max-width: none;
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
     position: relative;
-    text-align: left;
+    gap: 20px;
 }
 
 .json-input.two-column {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    align-items: flex-start;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 24px;
+    height: 100%;
+}
+
+.json-input.single-column {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .editor-container,
 .viewer-container {
-    flex: 1;
-    min-width: 0;
-    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--sketch-radius-lg);
+    box-shadow: var(--sketch-shadow-sm);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.editor-container:hover,
+.viewer-container:hover {
+    box-shadow: var(--sketch-shadow-md);
+    transform: translateY(-1px);
+}
+
+.editor-container::before,
+.viewer-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(249, 250, 251, 0.3) 100%);
+    pointer-events: none;
+    z-index: 1;
 }
 
 .json-input.two-column .editor-container,
 .json-input.two-column .viewer-container {
-    width: calc(50% - 12px);
+    width: 100%;
+}
+
+.json-input.single-column .editor-container {
+    flex: 1;
+    width: 100%;
 }
 
 .editor-container .ace_editor,
 .viewer-container .react-json-view {
     width: 100%;
+    position: relative;
+    z-index: 2;
 }
 
 .editor-container .ace_editor {
-    height: 75vh;
+    flex: 1;
+    height: 100%;
+    min-height: 0;
+    width: 100% !important;
+    background: transparent !important;
 }
 
 .viewer-container .react-json-view {
-    max-height: 75vh;
-    overflow: auto;
+    background: transparent;
+    position: relative;
+    z-index: 1;
+    height: auto;
+    min-height: 100%;
 }
 
-.json-input h2 {
-    color: var(--color-primary);
+/* H2 styles removed - headings no longer used */
+
+/* JsonViewer container with proper scrolling */
+.viewer-container {
+    position: relative;
+    height: 100%;
+    min-height: 200px;
+    max-height: 100%;
+    overflow: hidden;
+    /* Container doesn't scroll, wrapper does */
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* Wrapper for JsonViewer with scrolling capability */
+.json-viewer-wrapper {
+    flex: 1;
+    height: 100%;
+    min-height: 200px;
+    max-height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    /* Firefox */
+    scrollbar-color: var(--color-muted) transparent;
+    /* Firefox */
+}
+
+/* Webkit scrollbar styling for Chrome/Safari */
+.json-viewer-wrapper::-webkit-scrollbar {
+    width: 8px;
+}
+
+.json-viewer-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.json-viewer-wrapper::-webkit-scrollbar-thumb {
+    background: var(--color-muted);
+    border-radius: 4px;
+}
+
+.json-viewer-wrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--color-border);
+}
+
+/* JsonViewer Text Color Overrides for Better Visibility */
+.viewer-container .react-json-view {
+    color: var(--color-text) !important;
+}
+
+.viewer-container .react-json-view * {
+    color: var(--color-text) !important;
+}
+
+/* Override specific @textea/json-viewer classes */
+.viewer-container .react-json-view .object-key {
+    color: var(--color-primary) !important;
+}
+
+.viewer-container .react-json-view .string-value {
+    color: var(--color-primary) !important;
+}
+
+.viewer-container .react-json-view .number-value {
+    color: var(--color-accent) !important;
+}
+
+.viewer-container .react-json-view .boolean-value {
+    color: var(--color-secondary) !important;
+}
+
+.viewer-container .react-json-view .null-value {
+    color: var(--color-text-muted) !important;
+}
+
+.viewer-container .react-json-view .array-value,
+.viewer-container .react-json-view .object-value {
+    color: var(--color-text) !important;
+}
+
+/* Ensure all text elements are visible */
+.viewer-container .react-json-view div,
+.viewer-container .react-json-view span,
+.viewer-container .react-json-view a {
+    color: var(--color-text) !important;
+}
+
+/* High specificity override for @textea/json-viewer */
+div[class*="react-json-view"] {
+    color: #2c2c2c !important;
+    /* Dark text for maximum contrast */
+}
+
+div[class*="react-json-view"] * {
+    color: #2c2c2c !important;
+    /* Force all descendants to be dark */
+}
+
+/* Specific overrides for different value types with high contrast */
+div[class*="react-json-view"] .object-key-val,
+div[class*="react-json-view"] .object-key {
+    color: #4f46e5 !important;
+    /* Blue for keys */
+}
+
+div[class*="react-json-view"] .string,
+div[class*="react-json-view"] .string-value {
+    color: #4f46e5 !important;
+    /* Blue for strings */
+}
+
+div[class*="react-json-view"] .number,
+div[class*="react-json-view"] .number-value {
+    color: #7c3aed !important;
+    /* Purple for numbers */
+}
+
+div[class*="react-json-view"] .boolean,
+div[class*="react-json-view"] .boolean-value {
+    color: #6366f1 !important;
+    /* Indigo for booleans */
+}
+
+div[class*="react-json-view"] .null,
+div[class*="react-json-view"] .null-value {
+    color: #64748b !important;
+    /* Gray for null */
+}
+
+/* Force all text elements to be dark */
+div[class*="react-json-view"] span,
+div[class*="react-json-view"] div,
+div[class*="react-json-view"] a,
+div[class*="react-json-view"] li,
+div[class*="react-json-view"] ul {
+    color: #2c2c2c !important;
+}
+
+/* Ultimate override - target everything inside JsonViewer */
+.viewer-container div[class*="react-json-view"],
+.viewer-container div[class*="react-json-view"] *,
+.viewer-container [class*="react-json-view"],
+.viewer-container [class*="react-json-view"] * {
+    color: #2c2c2c !important;
+}
+
+/* Specific JsonViewer element overrides */
+.react-json-view,
+.react-json-view *,
+[data-testid*="json-view"],
+[data-testid*="json-view"] * {
+    color: #2c2c2c !important;
+}
+
+/* Empty State Styles - Excalidraw-inspired */
+.empty-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 3;
+    pointer-events: none;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--sketch-radius-lg);
+    box-shadow: var(--sketch-shadow-md);
+    padding: 32px 40px;
+    max-width: 300px;
+}
+
+.empty-state-icon {
+    font-size: 3em;
     margin-bottom: 16px;
+    opacity: 0.7;
+}
+
+.empty-state-content h3 {
+    color: var(--color-primary);
+    margin: 0 0 16px 0;
+    font-size: 1.5em;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+}
+
+.empty-state-content p {
+    color: var(--color-text-light);
+    margin: 0 0 20px 0;
+    font-size: 1em;
+    line-height: 1.5;
+    opacity: 0.9;
+    max-width: 280px;
+}
+
+.empty-state-tips {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.tip-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--color-text-muted);
+    font-size: 0.85em;
+    opacity: 0.7;
+}
+
+.tip-item kbd {
+    background: var(--color-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--sketch-radius-sm);
+    padding: 2px 6px;
+    font-size: 0.8em;
+    font-family: var(--font-mono);
+    color: var(--color-text);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .json-input .error {
-    color: red;
-    margin-bottom: 8px;
-    text-align: left;
+    color: var(--color-danger);
+    margin: 12px 20px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(220, 38, 38, 0.08) 0%, rgba(239, 68, 68, 0.04) 100%);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    border-radius: var(--sketch-radius-md);
+    font-size: 0.9em;
+    line-height: 1.4;
+    position: relative;
+    z-index: 3;
 }
 
-/* Button Group */
+/* Button Group - Legacy styling for any remaining buttons */
 .button-group {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    margin-top: 16px;
+    margin: 16px 20px;
     align-items: center;
+    position: relative;
+    z-index: 3;
 }
 
-/* Base Button Styles */
+/* Base Button Styles - Enhanced with micro-animations */
 .button,
 .icon-button {
     display: inline-flex;
@@ -69,12 +344,31 @@
     justify-content: center;
     color: var(--color-text-light);
     border: none;
-    border-radius: 6px;
+    border-radius: var(--sketch-radius-md);
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: inherit;
     font-weight: 500;
+    position: relative;
+    overflow: hidden;
+}
+
+.button::before,
+.icon-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.button:hover::before,
+.icon-button:hover::before {
+    left: 100%;
 }
 
 /* Text Button */
@@ -95,71 +389,53 @@
     font-size: 18px;
 }
 
-/* Individual Button Styles and States */
+/* Individual Button Styles and States - Updated for consistency */
 
 /* Format JSON Button */
 .button.format-button {
-    background-color: var(--color-primary);
+    background-color: var(--color-accent);
+    color: var(--color-text);
 }
 
 .button.format-button:hover {
-    background-color: #3c3045;
+    background-color: #d97706;
 }
 
-.button.format-button:active {
-    background-color: #2b1f2e;
-}
-
-/* Paste from Clipboard Button */
+/* Legacy buttons - simplified to match new palette */
 .icon-button.paste-button {
-    background-color: var(--color-info);
+    background-color: var(--color-primary);
+    color: var(--color-text-light);
 }
 
 .icon-button.paste-button:hover {
-    background-color: #31b0d5;
+    background-color: #4f46e5;
 }
 
-.icon-button.paste-button:active {
-    background-color: #269abc;
-}
-
-/* Copy Formatted JSON Button */
 .icon-button.copy-button {
     background-color: var(--color-success);
+    color: var(--color-text-light);
 }
 
 .icon-button.copy-button:hover {
-    background-color: #449d44;
+    background-color: #059669;
 }
 
-.icon-button.copy-button:active {
-    background-color: #398439;
-}
-
-/* Clear Button */
 .icon-button.clear-button {
     background-color: var(--color-danger);
+    color: var(--color-text-light);
 }
 
 .icon-button.clear-button:hover {
-    background-color: #c9302c;
+    background-color: #dc2626;
 }
 
-.icon-button.clear-button:active {
-    background-color: #ac2925;
-}
-
-/* Toggle Viewer Button */
 .icon-button.toggle-button {
-    background-color: var(--color-accent);
+    background-color: var(--color-secondary);
+    color: var(--color-text-light);
 }
 
 .icon-button.toggle-button:hover {
-    background-color: #e6b800;
-}
-
-.icon-button.toggle-button:active {
-    background-color: #cca300;
+    background-color: #6366f1;
 }
 
 /* Tooltip Styles */
@@ -224,18 +500,15 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .json-input.two-column {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0;
-    }
-
-    .editor-container,
-    .viewer-container {
-        width: 100%;
+        grid-template-columns: 1fr;
+        /* Single column on mobile */
+        gap: 16px;
     }
 
     .editor-container .ace_editor,
     .viewer-container .react-json-view {
-        height: 50vh;
+        flex: 1;
+        min-height: 300px;
+        /* Minimum height for mobile */
     }
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import AceEditor from 'react-ace';
 
 import ace from 'ace-builds/src-noconflict/ace';
@@ -10,7 +10,10 @@ import prettier from 'prettier/standalone';
 
 import { DataItemProps, JsonViewer } from '@textea/json-viewer';
 
+import TopToolbar from './TopToolbar.tsx';
+import { useNotification } from '../contexts/NotificationContext.tsx';
 import './JsonInput.css';
+import './TopToolbar.css';
 
 interface JsonInputProps {
   selectedKeyPath: string[];
@@ -31,13 +34,14 @@ const JsonInput: React.FC<JsonInputProps> = ({
   selectedKeyPath,
   setSelectedKeyPath,
 }) => {
+  const { showNotification } = useNotification();
   const [text, setText] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [jsonData, setJsonData] = useState<any>(null);
   const [showViewer, setShowViewer] = useState<boolean>(true);
 
   // Format JSON using Prettier
-  const formatJson = (input: string) => {
+  const formatJson = useCallback((input: string) => {
     try {
       const formatted = prettier.format(input, {
         parser: 'json',
@@ -59,7 +63,7 @@ const JsonInput: React.FC<JsonInputProps> = ({
       setJsonData(null);
       setSelectedKeyPath([]); // Reset breadcrumb on error
     }
-  };
+  }, [jsonData, setSelectedKeyPath]);
 
   // Handle changes in the editor
   const handleChange = (value: string) => {
@@ -85,51 +89,115 @@ const JsonInput: React.FC<JsonInputProps> = ({
   };
 
   // Handle paste from clipboard button click
-  const handlePasteFromClipboard = async () => {
+  const handlePasteFromClipboard = useCallback(async () => {
     try {
       const clipboardText = await navigator.clipboard.readText();
       if (clipboardText) {
         formatJson(clipboardText);
       } else {
-        alert('Clipboard is empty or does not contain text.');
+        showNotification('Clipboard is empty or does not contain text.', 'error');
       }
     } catch (error) {
       console.error('Failed to read clipboard contents: ', error);
-      alert(
-        'Failed to read clipboard contents. Please allow clipboard permissions.'
+      showNotification(
+        'Failed to read clipboard contents. Please allow clipboard permissions.',
+        'error'
       );
     }
-  };
+  }, [formatJson, showNotification]);
 
   // Handle copy formatted JSON button click
-  const handleCopyFormattedJson = async () => {
+  const handleCopyFormattedJson = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(text);
-      alert('Formatted JSON copied to clipboard!');
+      showNotification('Formatted JSON copied to clipboard!', 'success');
     } catch (error) {
       console.error('Failed to copy text: ', error);
-      alert('Failed to copy formatted JSON. Please try again.');
+      showNotification('Failed to copy formatted JSON. Please try again.', 'error');
     }
-  };
+  }, [text, showNotification]);
 
   // Handle format button click
-  const handleFormatClick = () => {
+  const handleFormatClick = useCallback(() => {
     formatJson(text);
-  };
+  }, [text, formatJson]);
 
   // Handle clear button click
-  const handleClearClick = () => {
+  const handleClearClick = useCallback(() => {
     setText('');
     setError('');
     setJsonData(null);
     setShowViewer(true);
     setSelectedKeyPath([]);
-  };
+  }, [setSelectedKeyPath]);
 
   // Handle viewer toggle button click
-  const handleToggleViewer = () => {
+  const handleToggleViewer = useCallback(() => {
     setShowViewer(!showViewer);
-  };
+  }, [showViewer]);
+
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+      const cmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
+
+      // Cmd/Ctrl+V - Paste
+      if (cmdOrCtrl && event.key === 'v' && !event.shiftKey) {
+        event.preventDefault();
+        handlePasteFromClipboard();
+        return;
+      }
+
+      // Shift+Cmd/Ctrl+F - Format
+      if (cmdOrCtrl && event.shiftKey && event.key === 'F') {
+        event.preventDefault();
+        if (text.trim()) {
+          handleFormatClick();
+        }
+        return;
+      }
+
+      // Cmd/Ctrl+B - Toggle Viewer
+      if (cmdOrCtrl && event.key === 'b') {
+        event.preventDefault();
+        if (jsonData) {
+          handleToggleViewer();
+        }
+        return;
+      }
+
+
+      // Cmd/Ctrl+C - Copy (only when not in editor)
+      if (cmdOrCtrl && event.key === 'c' && !event.shiftKey) {
+        const activeElement = document.activeElement;
+        const isInEditor = activeElement && (
+          activeElement.tagName === 'TEXTAREA' ||
+          activeElement.classList.contains('ace_text-input') ||
+          activeElement.closest('.ace_editor')
+        );
+
+        if (!isInEditor && text.trim()) {
+          event.preventDefault();
+          handleCopyFormattedJson();
+        }
+        return;
+      }
+
+      // Esc - Clear
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (text.trim()) {
+          handleClearClick();
+        }
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [text, jsonData, showViewer, handlePasteFromClipboard, handleFormatClick, handleToggleViewer, handleCopyFormattedJson, handleClearClick]);
 
   // Define custom key renderer
   const CustomKeyRenderer: React.FC<DataItemProps> & {
@@ -166,104 +234,111 @@ const JsonInput: React.FC<JsonInputProps> = ({
   };
 
   return (
-    <div className={`json-input ${jsonData ? 'two-column' : ''}`}>
-      <div className="editor-container">
-        <h2>JSON Input</h2>
-        {error && <div className="error">{error}</div>}
-        <AceEditor
-          mode="json"
-          theme="github"
-          name="json-editor"
-          onChange={handleChange}
-          value={text || ''}
-          onBlur={handleFormatClick}
-          editorProps={{ $blockScrolling: true }}
-          width="100%"
-          height="400px"
-          setOptions={{
-            showLineNumbers: true,
-            tabSize: 2,
-            useWorker: true,
-          }}
-          onLoad={(editor) => {
-            // Attach the paste event handler
-            editor.on('paste', handlePaste);
-          }}
-        />
-        <div className="button-group">
-          <button
-            className="button format-button"
-            onClick={handleFormatClick}
-          >
-            Format JSON
-          </button>
-          <button
-            className="icon-button paste-button"
-            onClick={handlePasteFromClipboard}
-            aria-label="Paste JSON from Clipboard"
-          >
-            <i className="fas fa-paste"></i>
-            <span className="tooltip">Paste JSON from Clipboard</span>
-          </button>
-          <button
-            className="icon-button clear-button"
-            onClick={handleClearClick}
-            aria-label="Clear JSON"
-          >
-            <i className="fas fa-trash-alt"></i>
-            <span className="tooltip">Clear JSON</span>
-          </button>
-          {jsonData && (
-            <>
-              <button
-                className="icon-button toggle-button"
-                onClick={handleToggleViewer}
-                aria-label={showViewer ? 'Hide Viewer' : 'Show Viewer'}
-              >
-                <i className={`fas fa-eye${showViewer ? '-slash' : ''}`}></i>
-                <span className="tooltip">
-                  {showViewer ? 'Hide Viewer' : 'Show Viewer'}
-                </span>
-              </button>
-              <button
-                className="icon-button copy-button"
-                onClick={handleCopyFormattedJson}
-                aria-label="Copy Formatted JSON"
-              >
-                <i className="fas fa-copy"></i>
-                <span className="tooltip">Copy Formatted JSON</span>
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-
-      {jsonData && showViewer && (
-        <div className="viewer-container">
-          <h2>JSON Viewer</h2>
-          <JsonViewer
-            value={jsonData}
-            rootName={false}
-            defaultInspectDepth={0} // Collapsed by default
-            theme="light"
-            displayDataTypes={false} // Hide data types
-            keyRenderer={CustomKeyRenderer}
-            onSelect={(path) => {
-              const pathStrings = path.map((p) => String(p));
-              setSelectedKeyPath(pathStrings);
+    <>
+      <TopToolbar
+        onPaste={handlePasteFromClipboard}
+        onFormat={handleFormatClick}
+        onToggleViewer={handleToggleViewer}
+        onCopy={handleCopyFormattedJson}
+        onClear={handleClearClick}
+        hasJsonData={jsonData !== null}
+        showViewer={showViewer}
+        hasText={text.trim().length > 0}
+      />
+      <div className={`json-input ${jsonData && showViewer ? 'two-column' : 'single-column'}`}>
+        <div className="editor-container">
+          {error && <div className="error" aria-live="polite" role="alert">{error}</div>}
+          <AceEditor
+            mode="json"
+            theme="github"
+            name="json-editor"
+            onChange={handleChange}
+            value={text || ''}
+            onBlur={handleFormatClick}
+            editorProps={{ $blockScrolling: true }}
+            width="100%"
+            height="400px"
+            aria-label="JSON editor"
+            setOptions={{
+              showLineNumbers: true,
+              tabSize: 2,
+              useWorker: true,
             }}
-            style={{
-              padding: '20px',
-              borderRadius: '8px',
-              backgroundColor: 'var(--color-background)',
-              border: '1px solid var(--color-muted)',
-              maxHeight: '75vh',
-              overflow: 'auto',
+            onLoad={(editor) => {
+              // Attach the paste event handler
+              editor.on('paste', handlePaste);
             }}
           />
         </div>
-      )}
-    </div>
+
+        {jsonData && showViewer && (
+          <div className="viewer-container" aria-label="JSON viewer">
+            <div className="json-viewer-wrapper">
+              <JsonViewer
+                value={jsonData}
+                rootName={false}
+                defaultInspectDepth={0}
+                theme={{
+                  scheme: 'custom',
+                  author: 'json-viewer',
+                  base00: '#ffffff', // background
+                  base01: '#f8f9fa',
+                  base02: '#e9ecef',
+                  base03: '#dee2e6',
+                  base04: '#ced4da',
+                  base05: '#2c2c2c', // main text color - DARK
+                  base06: '#495057',
+                  base07: '#343a40',
+                  base08: '#dc2626', // red
+                  base09: '#f59e0b', // orange
+                  base0A: '#7c3aed', // purple
+                  base0B: '#059669', // green
+                  base0C: '#0891b2', // cyan
+                  base0D: '#4f46e5', // blue
+                  base0E: '#be185d', // magenta
+                  base0F: '#92400e', // brown
+                }}
+                displayDataTypes={false} // Hide data types
+                keyRenderer={CustomKeyRenderer}
+                onSelect={(path) => {
+                  const pathStrings = path.map((p) => String(p));
+                  setSelectedKeyPath(pathStrings);
+                }}
+                style={{
+                  padding: '20px',
+                  borderRadius: '8px',
+                  backgroundColor: '#ffffff', // Pure white background for maximum contrast
+                  border: '1px solid var(--color-muted)',
+                  width: '100%',
+                  height: 'auto',
+                  minHeight: '100%',
+                  color: '#2c2c2c', // Explicit DARK text color
+                }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Empty state hint when no text is present - Excalidraw-inspired */}
+        {!text && (
+          <div className="empty-state">
+            <div className="empty-state-content">
+              <div className="empty-state-icon">📄</div>
+              <h3>Ready to explore your data?</h3>
+              <p>Paste your JSON below and watch it come alive with interactive visualizations</p>
+              <div className="empty-state-tips">
+                <span className="tip-item">
+                  <kbd>⌘V</kbd> or <kbd>Ctrl+V</kbd> to paste
+                </span>
+                <span className="tip-item">
+                  <kbd>⇧⌘F</kbd> or <kbd>Shift+Ctrl+F</kbd> to format
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </>
   );
 };
 

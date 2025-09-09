@@ -1,19 +1,24 @@
 import React, { useState } from 'react';
 import './App.css';
-import './components/Breadcrumb.css'; // Import the breadcrumb styles
+// import './components/Breadcrumb.css'; // Commented out - breadcrumb removed for minimal design
+import { NotificationProvider } from './contexts/NotificationContext.tsx';
 import JsonInput from './components/JsonInput.tsx';
 
 function App() {
   const [selectedKeyPath, setSelectedKeyPath] = useState<string[]>([]);
 
   return (
-    <div className="App">
-      <h1>JSON Viewer</h1>
-      {/* Centered Breadcrumb */}
-      {selectedKeyPath.length > 0 && (
-        <nav aria-label="Breadcrumb" className="breadcrumb-container">
-          <ol className="breadcrumb" itemScope itemType="http://schema.org/BreadcrumbList">
-            {selectedKeyPath.map((key, index) => (
+    <NotificationProvider>
+      <div className="App">
+        <div className="workspace">
+          <JsonInput selectedKeyPath={selectedKeyPath} setSelectedKeyPath={setSelectedKeyPath} />
+        </div>
+
+        {/* Commented out legacy UI elements for reference */}
+        {/* <h1>JSON Viewer</h1> */}
+        {/* {selectedKeyPath.length > 0 && (
+          <nav aria-label="Breadcrumb" className="breadcrumb-container">
+            <ol className="breadcrumb" itemScope itemType="http://schema.org/BreadcrumbList">
               <li
                 key={index}
                 itemProp="itemListElement"
@@ -26,9 +31,9 @@ function App() {
             ))}
           </ol>
         </nav>
-      )}
-      <JsonInput selectedKeyPath={selectedKeyPath} setSelectedKeyPath={setSelectedKeyPath} />
-    </div>
+      )} */}
+      </div>
+    </NotificationProvider>
   );
 }
 
