@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import AceEditor from 'react-ace';
 
 import ace from 'ace-builds/src-noconflict/ace';
@@ -10,10 +10,10 @@ import prettier from 'prettier/standalone';
 
 import { DataItemProps, JsonViewer } from '@textea/json-viewer';
 
-import TopToolbar from './TopToolbar.tsx';
 import { useNotification } from '../contexts/NotificationContext.tsx';
 import './JsonInput.css';
 import './TopToolbar.css';
+import TopToolbar from './TopToolbar.tsx';
 
 interface JsonInputProps {
   selectedKeyPath: string[];
@@ -38,7 +38,8 @@ const JsonInput: React.FC<JsonInputProps> = ({
   const [text, setText] = useState<string>('');
   const [error, setError] = useState<string>('');
   const [jsonData, setJsonData] = useState<any>(null);
-  const [showViewer, setShowViewer] = useState<boolean>(true);
+  // Default to editor-focused mode (not split). User can toggle viewer when needed.
+  const [showViewer, setShowViewer] = useState<boolean>(false);
 
   // Format JSON using Prettier
   const formatJson = useCallback((input: string) => {
@@ -77,8 +78,10 @@ const JsonInput: React.FC<JsonInputProps> = ({
 
   // Handle paste event to autoformat
   const handlePaste = (pastedData: any) => {
-    const clipboardData = pastedData.clipboardData || window.clipboardData;
-    if (clipboardData) {
+    // The editor emits a ClipboardEvent-like object; be explicit about the runtime shapes to satisfy TypeScript.
+    const maybeEvent = pastedData as ClipboardEvent | null;
+    const clipboardData = (maybeEvent && maybeEvent.clipboardData) || (window as any).clipboardData;
+    if (clipboardData && typeof clipboardData.getData === 'function') {
       const pastedText = clipboardData.getData('Text');
       formatJson(pastedText);
     } else {
@@ -106,6 +109,68 @@ const JsonInput: React.FC<JsonInputProps> = ({
     }
   }, [formatJson, showNotification]);
 
+  // Auto-paste from clipboard on mount (run only once). Inline formatting here to avoid
+  // depending on `formatJson` so this effect won't re-run when `formatJson` or `jsonData` changes.
+  useEffect(() => {
+    let cancelled = false;
+
+    const AUTO_PASTE_ON_LOAD = JSON.parse(localStorage.getItem('autoPasteOnLoad') ?? 'true');
+
+    if (!AUTO_PASTE_ON_LOAD) return;
+
+    (async function tryAutoPaste() {
+      if (!navigator.clipboard?.readText) return;
+      try {
+        const clipboardText = await navigator.clipboard.readText();
+        if (cancelled) return;
+        const trimmed = clipboardText?.trim();
+        if (!trimmed) return;
+        // Quick heuristic: starts with { or [
+        if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+          try {
+            // Inline formatting & parsing to avoid external deps and repeated effect triggers
+            let formatted = trimmed;
+            try {
+              formatted = prettier.format(trimmed, {
+                parser: 'json',
+                plugins: [parserBabel],
+              });
+            } catch {
+              // If prettier fails, keep original trimmed text and try JSON.parse on it
+              formatted = trimmed;
+            }
+
+            const parsedData = JSON.parse(formatted);
+            // Only update state if component is still mounted
+            if (cancelled) return;
+
+            setText(formatted);
+            setError('');
+            // update jsonData and reset breadcrumb
+            setJsonData(parsedData);
+            setSelectedKeyPath([]);
+            showNotification('Loaded JSON from clipboard', 'success');
+            // keep editor-first default; user can toggle viewer
+            setShowViewer(false);
+          } catch {
+            // If parse fails, do not set anything and silently skip
+          }
+        }
+      } catch (err) {
+        // Clipboard access may be denied or unavailable — do nothing silently.
+        console.info('Auto-paste skipped:', err && (err as Error).message ? (err as Error).message : err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+    // Note: intentionally omit `showNotification` from the dependency list because the
+    // notification context can provide a new function identity across renders which would
+    // retrigger this effect. We only want this auto-paste effect to run once on mount.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [setSelectedKeyPath]);
+
   // Handle copy formatted JSON button click
   const handleCopyFormattedJson = useCallback(async () => {
     try {
@@ -127,7 +192,8 @@ const JsonInput: React.FC<JsonInputProps> = ({
     setText('');
     setError('');
     setJsonData(null);
-    setShowViewer(true);
+    // keep editor-first default after clear
+    setShowViewer(false);
     setSelectedKeyPath([]);
   }, [setSelectedKeyPath]);
 
@@ -237,7 +303,6 @@ const JsonInput: React.FC<JsonInputProps> = ({
     <>
       <TopToolbar
         onPaste={handlePasteFromClipboard}
-        onFormat={handleFormatClick}
         onToggleViewer={handleToggleViewer}
         onCopy={handleCopyFormattedJson}
         onClear={handleClearClick}
@@ -278,15 +343,14 @@ const JsonInput: React.FC<JsonInputProps> = ({
                 value={jsonData}
                 rootName={false}
                 defaultInspectDepth={0}
-                theme={{
-                  scheme: 'custom',
+                theme={({
                   author: 'json-viewer',
                   base00: '#ffffff', // background
                   base01: '#f8f9fa',
                   base02: '#e9ecef',
                   base03: '#dee2e6',
                   base04: '#ced4da',
-                  base05: '#2c2c2c', // main text color - DARK
+                  base05: '#111827', // main text color - darker for better contrast
                   base06: '#495057',
                   base07: '#343a40',
                   base08: '#dc2626', // red
@@ -297,7 +361,7 @@ const JsonInput: React.FC<JsonInputProps> = ({
                   base0D: '#4f46e5', // blue
                   base0E: '#be185d', // magenta
                   base0F: '#92400e', // brown
-                }}
+                } as any)}
                 displayDataTypes={false} // Hide data types
                 keyRenderer={CustomKeyRenderer}
                 onSelect={(path) => {
@@ -312,7 +376,7 @@ const JsonInput: React.FC<JsonInputProps> = ({
                   width: '100%',
                   height: 'auto',
                   minHeight: '100%',
-                  color: '#2c2c2c', // Explicit DARK text color
+                  color: '#0f172a', // Stronger dark text color for readability
                 }}
               />
             </div>

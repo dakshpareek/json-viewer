@@ -8,33 +8,39 @@
     font-family: var(--font-primary);
 }
 
+/* top-toolbar-shell left for legacy layout compatibility but visually the toolbar is floating now.
+   Keep minimal height so any references still compute correctly, but make it visually inert. */
 .top-toolbar-shell {
-    height: 64px;
-    background: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-    box-shadow: var(--sketch-shadow-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    height: 0;
+    /* toolbar is floating; avoid reserving a full block */
+    background: transparent;
+    border-bottom: none;
+    box-shadow: none;
+    display: block;
     flex-shrink: 0;
     position: relative;
+    pointer-events: none;
 }
 
 .top-toolbar-shell::before {
     content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
-    pointer-events: none;
-    opacity: 0.3;
+    display: none;
 }
 
+/* Workspace must account for floating toolbar so content doesn't get overlapped.
+   We add top padding equal to the floating toolbar safe area (toolbar height + comfortable margin). */
 .workspace {
-    height: calc(100vh - 64px);
+    height: 100vh;
     overflow: auto;
-    padding: 20px 24px;
+    padding: 92px 24px 24px 24px;
+    /* top padding reserves space for floating toolbar (approx 40px toolbar + margin) */
     background: transparent;
+    box-sizing: border-box;
+}
+
+/* If you still render a non-floating toolbar variant, allow a modifier on App to reduce top padding.
+   Example: add class `toolbar-relative` on `.App` to use in that case. */
+.App.toolbar-relative .workspace {
+    padding-top: 24px;
+    height: calc(100vh - 64px);
 }
